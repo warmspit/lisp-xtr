@@ -118,7 +118,83 @@ func lispIPCmessageProcessing() {
 	}
 	//
 	// If named socket file exists, remove it. Then open the socket.
-	//
+	//#>>> n# <<< invalid command
+# lispers.net lisp.config file, last changed: Wed Dec 11 14:48:48 UTC 2019
+#
+# Hostname: db
+#
+# (1) Only commands between the first pair of dotted lines will be processed. 
+#
+# (2) Any lines you find prepended with "#>>>" are errors found during command 
+#     processing.
+#
+# (3) You may comment out lines by placing a "#" in the first column of any 
+#     line between the section between the first pair of dotted lines.
+#
+# (4) Note the hostname and modification timestamp above are auto generated
+#     after you have saved this file and it has been processed.
+#
+# (5) Deleting configuration can be achieved by deleting lines and restarting
+#     the LISP component or by use of the LISP API.
+#
+# (6) The landing web page on any device provides detailed Command and API
+#     documentation. Just click on those buttons.
+#
+# (7) Any name references must follow their definitions. Examples are 
+#     elp-names and rle-names when referred to in static map-cache entries.
+#
+# DO NOT REMOVE THE LINES "#--- ... ---" and "#--- ... ---#".    
+#
+#-----------------------------------------------------------------------------
+lisp enable {
+    itr = yes
+    etr = yes
+    rtr = no
+    map-server = no
+    map-resolver = no
+    ddt-node = no
+}
+lisp debug {
+    etr = no
+    core = no
+    map-resolver = no
+    ddt-node = no
+    rtr = no
+    map-server = no
+    itr = no
+}
+lisp user-account {
+    username = root
+    password = =b9e5c39708999f844a3c864e863c12618bf8a3f5
+    super-user = yes
+}
+lisp xtr-parameters {
+    rloc-probing = no
+    nat-traversal = no
+    data-plane-security = no
+    ipc-data-plane = yes
+    data-plane-logging = no
+}
+lisp database-mapping {
+    prefix {
+        instance-id = 100
+        eid-prefix = 1.1.1.1/32
+    }
+    rloc {
+        address = 172.17.0.255
+    }
+}
+lisp map-cache {
+    prefix {
+        instance-id = 100
+        eid-prefix = 0.0.0.0/0
+    }
+    rloc {
+        address = 172.17.0.1
+    }
+}
+#-----------------------------------------------------------------------------#
+
 	sa.Name = lispersDir + "lisp-ipc-data-plane"
 	sa.Net = "unixgram"
 	_, err := os.Stat(sa.Name)
@@ -159,24 +235,18 @@ func lispIPCmessageProcessing() {
 		// not sure if lisp does this or not
 		err = json.Unmarshal(buf, &lispIPCrawMsgs)
 		if err != nil {
-
 			lprint("error unmarshaling jsohn in ipc loop %v %v", err, string(buf))
 		}
 
-		fmt.Printf("********** RAW MESSAGES %v\r\n", lispIPCrawMsgs)
-
 		for _, rawMsg := range lispIPCrawMsgs {
-			fmt.Printf("************ message type  is %v\r\n", string(rawMsg.Type))
 
 			switch rawMsg.Type {
 
 			case "entire-map-cache":
 				targetIPC = new(databaseMappings)
-				debug("************entire map cache %v \r\n", string(rawMsg.Message))
 
 			case "database-mappings":
 				targetIPC = new(databaseMappings)
-				lprint("IPC is database mappings %v", rawMsg)
 			case "entries":
 				targetIPC = new(entireMapCache)
 			case "rlocs":
