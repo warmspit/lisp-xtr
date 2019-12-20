@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "lisp-core.py", line 53, in <module>
+  File "lisp.py", line 38, in <module>
+ImportError: No module named netifaces

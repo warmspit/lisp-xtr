@@ -1,0 +1,30 @@
+#!/bin/tcsh
+#
+# RL - Restart LISP Wrapper Script
+#
+# This is a wrapper script for ./RESTART-LISP. You want to use it to do
+# EID address assignment on kernel created interfaces as well as setting
+# default and other static route parameters.
+#
+# Most importantly, you can tell this script where your ./RESTART-LISP script
+# is and pass parameters to the script such as the RLOC interface you use.
+#
+# Put a call to this script in /etc/rc.local so on system startup the LISP 
+# subsystem will start automatically. For example, add this line to /etc/rc.
+# local:
+#
+#    /home/<install-directory>/lispers.net/RL || exit 1
+#
+#------------------------------------------------------------------------------
+
+# -------------------- xTR EID Address Configuration --------------------
+
+sudo ip addr add 1.1.1.1/32 dev lo >& /dev/null
+
+#
+# Start the lispers.net LISP subsystem. Use an absolute path name.
+#
+/lispers.net/RESTART-LISP 8080 eth0
+
+#------------------------------------------------------------------------------
+
