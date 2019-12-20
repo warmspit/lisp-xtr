@@ -162,7 +162,7 @@ func lispIPCmessageProcessing() {
 		// not sure if lisp does this or not
 		err = json.Unmarshal(buf, &lispIPCrawMsgs)
 		if err != nil {
-			lprint("error unmarshaling jsohn in ipc loop %v %v", err, string(buf))
+			lprint("error unmarshaling json in ipc loop %v %v", err, string(buf))
 		}
 
 		for _, rawMsg := range lispIPCrawMsgs {
