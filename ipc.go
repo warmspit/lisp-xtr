@@ -168,10 +168,8 @@ func lispIPCmessageProcessing() {
 		for _, rawMsg := range lispIPCrawMsgs {
 
 			switch rawMsg.Type {
-
 			case "entire-map-cache":
 				targetIPC = new(databaseMappings)
-
 			case "database-mappings":
 				targetIPC = new(databaseMappings)
 			case "entries":
@@ -181,13 +179,16 @@ func lispIPCmessageProcessing() {
 			default:
 				lprint("unkown IPC type %v", rawMsg)
 			}
-			err := json.Unmarshal(rawMsg.Message, targetIPC)
-			if err != nil {
-				lprint("error unmarshaling IPC message %v", targetIPC)
-			}
+// david debug
 			lprint("IPC = %v")
 		}
+		err := json.Unmarshal(rawMsg.Message, targetIPC)
+		if err != nil {
+			lprint("error unmarshaling IPC message %v", targetIPC)
+		}
 
+
+		/*
 		jdata = make(map[string]interface{}, 0)
 		err = json.Unmarshal(buf[0:n], &jdata)
 		if err != nil {
@@ -199,7 +200,7 @@ func lispIPCmessageProcessing() {
 			lprint("JSON 'type' not found")
 			continue
 		}
-
+*/
 		//
 		// Process each JSON type.
 		//
