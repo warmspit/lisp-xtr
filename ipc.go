@@ -172,16 +172,19 @@ func lispIPCmessageProcessing() {
 			case "database-mappings":
 				targetIPC = new(databaseMappings)
 			case "entire-map-cache":
-				targetIPC = new(databaseMappings)
-			case "entries":
 				targetIPC = new(entireMapCache)
+			case "entries":
+				targetIPC = new(mapCache)
 			case "etr-nat-port":
+				targetIPC = new(etrNatPort)
 			case "interfaces":
+				targetIPC = new(interfaces)
 			case "itr-crypto-port":
+				targetIPC = new(itrCryptoPort)
 			case "map-cache":
 				targetIPC = new(databaseMappings)
 			case "rlocs":
-				targetIPC = new(mapCache)
+				targetIPC = new(rlocs)
 			case "xtr-parameters":
 			default:
 				lprint("unkown IPC type %v", rawMsg)
