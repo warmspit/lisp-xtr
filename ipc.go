@@ -168,39 +168,45 @@ func lispIPCmessageProcessing() {
 		for _, rawMsg := range lispIPCrawMsgs {
 
 			switch rawMsg.Type {
-			case "entire-map-cache":
-				targetIPC = new(databaseMappings)
+			case "decap-keys":
 			case "database-mappings":
+				targetIPC = new(databaseMappings)
+			case "entire-map-cache":
 				targetIPC = new(databaseMappings)
 			case "entries":
 				targetIPC = new(entireMapCache)
+			case "etr-nat-port":
+			case "interfaces":
+			case "itr-crypto-port":
+			case "map-cache":
+				targetIPC = new(databaseMappings)
 			case "rlocs":
 				targetIPC = new(mapCache)
+			case "xtr-parameters":
 			default:
 				lprint("unkown IPC type %v", rawMsg)
 			}
-// david debug
+			// david debug
 			lprint("IPC = %v")
 		}
-		err := json.Unmarshal(rawMsg.Message, targetIPC)
+		err = json.Unmarshal(rawMsg.Message, targetIPC)
 		if err != nil {
 			lprint("error unmarshaling IPC message %v", targetIPC)
 		}
 
-
 		/*
-		jdata = make(map[string]interface{}, 0)
-		err = json.Unmarshal(buf[0:n], &jdata)
-		if err != nil {
-			lprint("json.Unmarshall() failed: %s", err)
-			continue
-		}
-		value, ok := jdata["type"]
-		if !ok {
-			lprint("JSON 'type' not found")
-			continue
-		}
-*/
+			jdata = make(map[string]interface{}, 0)
+			err = json.Unmarshal(buf[0:n], &jdata)
+			if err != nil {
+				lprint("json.Unmarshall() failed: %s", err)
+				continue
+			}
+			value, ok := jdata["type"]
+			if !ok {
+				lprint("JSON 'type' not found")
+				continue
+			}
+		*/
 		//
 		// Process each JSON type.
 		//
