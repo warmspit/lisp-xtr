@@ -64,42 +64,7 @@ var lispETRnatPort int
 var lispDecapKeys map[string]*lispRloc
 var lispDecapStats map[string]*lispStats
 
-type entireMapCache struct {
-	Entries []struct {
-		EidPrefix  string `json:"eid-prefix"`
-		InstanceID string `json:"instance-id"`
-		Opcode     string `json:"opcode"`
-		Rlocs      []struct {
-			Port     string `json:"port"`
-			Priority string `json:"priority"`
-			Rloc     string `json:"rloc"`
-			Weight   string `json:"weight"`
-		} `json:"rlocs"`
-		Type string `json:"type"`
-	} `json:"entries"`
-	Type string `json:"type"`
-}
 
-type mapCache struct {
-	EidPrefix  string `json:"eid-prefix"`
-	InstanceID string `json:"instance-id"`
-	Opcode     string `json:"opcode"`
-	Rlocs      []struct {
-		Port     string `json:"port"`
-		Priority string `json:"priority"`
-		Rloc     string `json:"rloc"`
-		Weight   string `json:"weight"`
-	} `json:"rlocs"`
-	Type string `json:"type"`
-}
-
-type databaseMappings struct {
-	DatabaseMappings []struct {
-		EidPrefix  string `json:"eid-prefix"`
-		InstanceID string `json:"instance-id"`
-	} `json:"database-mappings"`
-	Type string `json:"type"`
-}
 
 //
 // lispIPCmessageProcessing
@@ -166,15 +131,42 @@ func lispIPCmessageProcessing() {
 		}
 
 		for _, rawMsg := range lispIPCrawMsgs {
-
 			switch rawMsg.Type {
 			case "decap-keys":
 			case "database-mappings":
 				targetIPC = new(databaseMappings)
-			case "entire-map-cache":
+			case "entire-map-cache": // david
 				targetIPC = new(entireMapCache)
+
+				if err:= json.Unmarshal(rawMsg, &targetIPC ); err != nil {
+					lprint("error unmarshaling json in ipc loop %v %v", err, string(buf))	
+				}
+
+				if len(targetIPC.Entries) == 0 {lmlClearHashTable()} else {
+					for _, entry :=  range targetIPC.Entries {
+						lispStoreMapCacheData(entry)
+					}
+				}
+
+/*
+				if value == "entire-map-cache" {
+					entries := jdata["entries"].([]interface{})
+					if len(entries) == 0 {
+						lmlClearHashTable()
+					}
+					for _, jj := range entries {
+						j := jj.(map[string]interface{})
+						lispStoreMapCacheData(j)
+					}
+*/
 			case "entries":
 				targetIPC = new(mapCache)
+				if err:= json.Unmarshal(rawMsg, &targetIPC ); err != nil {
+					lprint("error unmarshaling json in ipc loop %v %v", err, string(buf))	
+				}
+				lispStoreMapCacheData(targetIPC)
+
+
 			case "etr-nat-port":
 				targetIPC = new(etrNatPort)
 			case "interfaces":
@@ -182,7 +174,8 @@ func lispIPCmessageProcessing() {
 			case "itr-crypto-port":
 				targetIPC = new(itrCryptoPort)
 			case "map-cache":
-				targetIPC = new(databaseMappings)
+				targetIPC = new(mapCache)
+				lispStoreMapCacheData(targetIPC)
 			case "rlocs":
 				targetIPC = new(rlocs)
 			case "xtr-parameters":
@@ -210,23 +203,13 @@ func lispIPCmessageProcessing() {
 				continue
 			}
 		*/
-		//
-		// Process each JSON type.
-		//
-		if value == "entire-map-cache" {
-			entries := jdata["entries"].([]interface{})
-			if len(entries) == 0 {
-				lmlClearHashTable()
-			}
-			for _, jj := range entries {
-				j := jj.(map[string]interface{})
-				lispStoreMapCacheData(j)
-			}
+	
 
-		} else if value == "map-cache" {
-			lispStoreMapCacheData(jdata)
-
-		} else if value == "database-mappings" {
+	//	if value == "map-cache" {
+	//		lispStoreMapCacheData(jdata)
+	//	} else 
+		
+		if value == "database-mappings" {
 			lispDB = make([]lispDatabase, 0)
 			for _, jj := range jdata["database-mappings"].([]interface{}) {
 				j := jj.(map[string]interface{})
@@ -388,12 +371,13 @@ func lispStoreKeys(mc *lispMapCache, rloc *lispRloc, keyName string,
 // Store map-cache data from this JSON structure documented in lisp-ipc-data-
 // plane.tx.
 //
-func lispStoreMapCacheData(jdata map[string]interface{}) {
+func lispStoreMapCacheData(mapC mapCache) {
 	var lispMCentry *lispMapCache
 	var eid lispAddress
 
-	iid, _ := strconv.Atoi(jdata["instance-id"].(string))
-	eid.lispStoreAddress(iid, jdata["eid-prefix"].(string))
+	iid, _ := strconv.Atoi(mapC.instanceID )
+	eid.lispStoreAddress(iid,mapC.eidPrefix )
+	
 	lispMCentry = new(lispMapCache)
 	lispMCentry.eidPrefix = eid
 
