@@ -172,6 +172,7 @@ func lispIPCmessageProcessing() {
 
 		case "etr-nat-port":
 			eNP := etrNatPort{}
+			
 		case "interfaces":
 			ifaces := interfaces{}
 			if err := json.Unmarshal(buf, &ifaces); err != nil {

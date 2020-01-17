@@ -126,5 +126,3 @@ type statistics struct {
 	} `json:"entries"`
 	Type string `json:"type"`
 }
-
-type xtrParameters struct{}
