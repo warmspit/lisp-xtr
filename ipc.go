@@ -64,8 +64,6 @@ var lispETRnatPort int
 var lispDecapKeys map[string]*lispRloc
 var lispDecapStats map[string]*lispStats
 
-
-
 //
 // lispIPCmessageProcessing
 //
@@ -109,7 +107,7 @@ func lispIPCmessageProcessing() {
 	for {
 		time.Sleep(100 * time.Millisecond)
 
-		// db timestamp
+		// david timestamp
 		timeIn := time.Now()
 
 		n, err := socket.Read(buf[:])
@@ -120,110 +118,112 @@ func lispIPCmessageProcessing() {
 
 		lprint("Received %s: '%s'", bold("IPC"), buf[0:n])
 
-		var targetIPC interface{}
-		var lispIPCrawMsgs []lispIPCrawMsg
+		var lispIPCrawMsg lispIPCrawMsg
 
 		// assume we may have packed IPC messages
 		// not sure if lisp does this or not
-		err = json.Unmarshal(buf, &lispIPCrawMsgs)
+		err = json.Unmarshal(buf, &lispIPCrawMsg)
 		if err != nil {
 			lprint("error unmarshaling json in ipc loop %v %v", err, string(buf))
 		}
 
-		for _, rawMsg := range lispIPCrawMsgs {
-			switch rawMsg.Type {
-			case "decap-keys":
-			case "database-mappings":
-				targetIPC = new(databaseMappings)
-			case "entire-map-cache": // david
-				targetIPC = new(entireMapCache)
-
-				if err:= json.Unmarshal(rawMsg, &targetIPC ); err != nil {
-					lprint("error unmarshaling json in ipc loop %v %v", err, string(buf))	
-				}
-
-				if len(targetIPC.Entries) == 0 {lmlClearHashTable()} else {
-					for _, entry :=  range targetIPC.Entries {
-						lispStoreMapCacheData(entry)
-					}
-				}
-
-/*
-				if value == "entire-map-cache" {
-					entries := jdata["entries"].([]interface{})
-					if len(entries) == 0 {
-						lmlClearHashTable()
-					}
-					for _, jj := range entries {
-						j := jj.(map[string]interface{})
-						lispStoreMapCacheData(j)
-					}
-*/
-			case "entries":
-				targetIPC = new(mapCache)
-				if err:= json.Unmarshal(rawMsg, &targetIPC ); err != nil {
-					lprint("error unmarshaling json in ipc loop %v %v", err, string(buf))	
-				}
-				lispStoreMapCacheData(targetIPC)
-
-
-			case "etr-nat-port":
-				targetIPC = new(etrNatPort)
-			case "interfaces":
-				targetIPC = new(interfaces)
-			case "itr-crypto-port":
-				targetIPC = new(itrCryptoPort)
-			case "map-cache":
-				targetIPC = new(mapCache)
-				lispStoreMapCacheData(targetIPC)
-			case "rlocs":
-				targetIPC = new(rlocs)
-			case "xtr-parameters":
-			default:
-				lprint("unkown IPC type %v", rawMsg)
-			}
-			// david debug
-			lprint("IPC = %v")
-		}
-		err = json.Unmarshal(rawMsg.Message, targetIPC)
-		if err != nil {
-			lprint("error unmarshaling IPC message %v", targetIPC)
-		}
-
-		/*
-			jdata = make(map[string]interface{}, 0)
-			err = json.Unmarshal(buf[0:n], &jdata)
+		//	for _, rawMsg := range lispIPCrawMsg {
+		switch lispIPCrawMsg.Type {
+		case "decap-keys":
+		case "database-mappings":
+			dM := databaseMappings{}
+			err = json.Unmarshal(buf, &dM)
 			if err != nil {
-				lprint("json.Unmarshall() failed: %s", err)
-				continue
+				lprint("error unmarshaling json in ipc loop %v %v", err, string(buf))
 			}
-			value, ok := jdata["type"]
-			if !ok {
-				lprint("JSON 'type' not found")
-				continue
-			}
-		*/
-	
 
-	//	if value == "map-cache" {
-	//		lispStoreMapCacheData(jdata)
-	//	} else 
-		
-		if value == "database-mappings" {
-			lispDB = make([]lispDatabase, 0)
-			for _, jj := range jdata["database-mappings"].([]interface{}) {
-				j := jj.(map[string]interface{})
-				iid, _ := strconv.Atoi(j["instance-id"].(string))
-				eid = j["eid-prefix"].(string)
-				lispDatabaseEntry.eidPrefix.lispStoreAddress(iid, eid)
+			for _, mm := range dM.DatabaseMappings {
+				iid, _ := strconv.Atoi(mm.InstanceID)
+				lispDatabaseEntry.eidPrefix.lispStoreAddress(iid, mm.EidPrefix)
 				lispDB = append(lispDB, lispDatabaseEntry)
 			}
+
 			if len(lispDB) != 0 && len(lispNterfaces) != 0 {
 				lispConfigChange++
 				lispStartITRdataPlane()
 			}
 
-		} else if value == "interfaces" {
+		case "entire-map-cache": // david
+			eMC := entireMapCache{}
+
+			if err := json.Unmarshal(buf, &eMC); err != nil {
+				lprint("error unmarshaling json in ipc loop for entire-map-cache%v %v", err, string(buf))
+			}
+
+			if len(eMC.Entries) == 0 {
+				lmlClearHashTable()
+			} else {
+				for _, entry := range eMC.Entries {
+					lispStoreMapCacheData(entry)
+				}
+			}
+
+		case "entries":
+			mC := mapCache{}
+			if err := json.Unmarshal(buf, &mC); err != nil {
+				lprint("error unmarshaling json in ipc loop for map-ceache %v %v", err, string(buf))
+			}
+			lispStoreMapCacheData(mC)
+
+		case "etr-nat-port":
+			eNP := etrNatPort{}
+		case "interfaces":
+			ifaces := interfaces{}
+			if err := json.Unmarshal(buf, &ifaces); err != nil {
+				lprint("error unmarshaling json in ipc loop for interfaces %v %v", err, string(buf))
+			}
+			
+for _, i := range ifaces{
+
+}
+
+
+				if value == "interfaces" {
+					newInterfaces := make(map[string]lispInterface, 0)
+					for _, jj := range jdata["interfaces"].([]interface{}) {
+						j := jj.(map[string]interface{})
+						device := j["interface"].(string)
+						iid, _ := strconv.Atoi(j["instance-id"].(string))
+
+						entry, ok := lispNterfaces[device]
+						if ok {
+							entry.instanceID = int(iid)
+							newInterfaces[device] = entry
+						} else {
+							lispNterface.instanceID = int(iid)
+							newInterfaces[device] = lispNterface
+						}
+					}
+					lispNterfaces = newInterfaces
+					if len(lispDB) != 0 && len(lispNterfaces) != 0 {
+						lispConfigChan
+						ge++
+						lispStartITRdataPlane()
+					}
+			
+
+		case "itr-crypto-port":
+			iCP := itrCryptoPort{}
+		case "map-cache":
+			mC := mapCache{}
+			lispStoreMapCacheData(mC)
+		case "rlocs":
+			rls := rlocs{}
+		case "xtr-parameters":
+		default:
+			lprint("unkown IPC type %v", buf)
+		}
+		// david debug
+		lprint("IPC = %v")
+
+		//////////////////////
+
+		if value == "interfaces" {
 			newInterfaces := make(map[string]lispInterface, 0)
 			for _, jj := range jdata["interfaces"].([]interface{}) {
 				j := jj.(map[string]interface{})
@@ -375,9 +375,9 @@ func lispStoreMapCacheData(mapC mapCache) {
 	var lispMCentry *lispMapCache
 	var eid lispAddress
 
-	iid, _ := strconv.Atoi(mapC.instanceID )
-	eid.lispStoreAddress(iid,mapC.eidPrefix )
-	
+	iid, _ := strconv.Atoi(mapC.instanceID)
+	eid.lispStoreAddress(iid, mapC.eidPrefix)
+
 	lispMCentry = new(lispMapCache)
 	lispMCentry.eidPrefix = eid
 

@@ -25,7 +25,9 @@ type entireMapCache struct {
 	} `json:"entries"`
 	Type string `json:"type"`
 }
-type interfaces struct{}
+type interfaces struct {
+	foo lll
+}
 
 type mapCache struct {
 	EidPrefix  string `json:"eid-prefix"`
